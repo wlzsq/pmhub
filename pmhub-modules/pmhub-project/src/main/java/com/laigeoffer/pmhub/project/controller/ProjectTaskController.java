@@ -8,11 +8,13 @@ import com.laigeoffer.pmhub.base.core.core.domain.AjaxResult;
 import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.dto.ApprovalSetDTO;
 import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectProcessDTO;
+import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.WfTaskProcess;
 import com.laigeoffer.pmhub.base.core.enums.ProjectStatusEnum;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
 import com.laigeoffer.pmhub.base.core.utils.poi.ExcelUtil;
+import com.laigeoffer.pmhub.base.security.annotation.InnerAuth;
 import com.laigeoffer.pmhub.base.security.annotation.RequiresPermissions;
 import com.laigeoffer.pmhub.project.domain.Project;
 import com.laigeoffer.pmhub.project.domain.ProjectTask;
@@ -340,6 +342,17 @@ public class ProjectTaskController {
             return AjaxResult.error("远程调用审批服务失败");
         }
         return AjaxResult.success();
+    }
+
+    /**
+     * 更新任务流程
+     * @param projectTaskProcessDTO
+     * @return
+     */
+    @InnerAuth
+    @PutMapping("/task/process")
+    public R<?> updateTaskProcess(@RequestBody ProjectTaskProcessDTO projectTaskProcessDTO) {
+        return R.ok(projectTaskService.updateTaskProcess(projectTaskProcessDTO));
     }
 
 }

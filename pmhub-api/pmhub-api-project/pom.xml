@@ -5,30 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.laigeoffer.pmhub-cloud</groupId>
-        <artifactId>pmhub</artifactId>
+        <artifactId>pmhub-api</artifactId>
         <version>0.0.1</version>
     </parent>
 
-    <artifactId>pmhub-api</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>pmhub-api-project</artifactId>
+    <description>pmhub-api-project项目接口feign</description>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <modules>
-        <module>pmhub-api-system</module>
-        <module>pmhub-api-workflow</module>
-        <module>pmhub-api-project</module>
-    </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.laigeoffer.pmhub-cloud</groupId>
-            <artifactId>pmhub-base-core</artifactId>
-        </dependency>
-    </dependencies>
 
 </project>

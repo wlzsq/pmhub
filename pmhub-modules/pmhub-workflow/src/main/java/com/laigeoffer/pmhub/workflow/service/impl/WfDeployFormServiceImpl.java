@@ -57,7 +57,6 @@ public class WfDeployFormServiceImpl implements IWfDeployFormService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public boolean saveInternalDeployForm(String deployId, BpmnModel bpmnModel) {
         List<WfDeployForm> deployFormList = new ArrayList<>();
         // 获取开始节点

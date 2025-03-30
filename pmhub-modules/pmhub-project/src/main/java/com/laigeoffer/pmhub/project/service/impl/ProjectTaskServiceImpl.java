@@ -2,6 +2,8 @@ package com.laigeoffer.pmhub.project.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
@@ -13,6 +15,7 @@ import com.laigeoffer.pmhub.base.core.config.PmhubConfig;
 import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.dto.ApprovalSetDTO;
+import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysUser;
 import com.laigeoffer.pmhub.base.core.core.domain.model.LoginUser;
 import com.laigeoffer.pmhub.base.core.core.domain.vo.SysUserVO;
@@ -75,6 +78,8 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
     private QueryTaskLogFactory queryTaskLogFactory;
     @Autowired
     private ProjectFileMapper projectFileMapper;
+    @Autowired
+    private ProjectTaskProcessMapper projectTaskProcessMapper;
 
     // 远程调用流程服务
     @Resource
@@ -916,6 +921,17 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
     @Override
     public List<Project> queryProjectsStatus(List<String> projectIds) {
         return projectTaskMapper.queryProjectsStatus(projectIds);
+    }
+
+    @Override
+    public int updateTaskProcess(ProjectTaskProcessDTO projectTaskProcessDTO) {
+        LambdaUpdateWrapper<ProjectTaskProcess> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.likeRight(ProjectTaskProcess::getDefinitionId, projectTaskProcessDTO.getOriginDefinitionId())
+                .eq(ProjectTaskProcess::getApproved, projectTaskProcessDTO.getApproved())
+                .isNull(ProjectTaskProcess::getInstanceId)
+                .set(ProjectTaskProcess::getDefinitionId, projectTaskProcessDTO.getDefinitionId())
+                .set(ProjectTaskProcess::getDeploymentId, projectTaskProcessDTO.getDeploymentId());
+        return projectTaskProcessMapper.update(null, updateWrapper);
     }
 
 }
