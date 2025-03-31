@@ -22,6 +22,7 @@ public class ProjectTaskProcess implements Serializable {
     private String id;
     private String approved;
     private String extraId;
+    @TableField(value = "instance_id", updateStrategy = FieldStrategy.IGNORED)
     private String instanceId;
     @TableField(value = "deployment_id", updateStrategy = FieldStrategy.IGNORED)
     private String deploymentId;

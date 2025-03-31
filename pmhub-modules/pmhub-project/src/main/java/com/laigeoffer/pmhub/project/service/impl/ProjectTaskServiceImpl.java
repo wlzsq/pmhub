@@ -941,5 +941,12 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
         return projectTaskProcessMapper.selectList(queryWrapper);
     }
 
+    @Override
+    public ProjectTaskProcess selectOneTaskProcess(ProjectTaskProcessDTO projectTaskProcessDTO) {
+        LambdaQueryWrapper<ProjectTaskProcess> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(ProjectTaskProcess::getExtraId, projectTaskProcessDTO.getExtraId()).eq(ProjectTaskProcess::getType, projectTaskProcessDTO.getType());
+        return projectTaskProcessMapper.selectOne(queryWrapper);
+    }
+
 
 }

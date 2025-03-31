@@ -1,13 +1,19 @@
 package com.laigeoffer.pmhub.workflow.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.laigeoffer.pmhub.api.project.ProjectTaskProcessService;
+import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.PageQuery;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
+import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
 import com.laigeoffer.pmhub.base.core.core.page.Table2DataInfo;
 import com.laigeoffer.pmhub.base.core.enums.ProjectStatusEnum;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
+import com.laigeoffer.pmhub.base.core.utils.bean.BeanUtils;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
 import com.laigeoffer.pmhub.workflow.core.domain.ProcessQuery;
@@ -57,6 +63,7 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
     private final WfApprovalSetMapper wfApprovalSetMapper;
     private final WfTaskProcessMapper wfTaskProcessMapper;
     private final WfMaterialsScrappedProcessMapper wfMaterialsScrappedProcessMapper;
+    private final ProjectTaskProcessService projectTaskProcessService;
 
     @Override
     public Table2DataInfo<WfDeployVo> queryPageList(ProcessQuery processQuery, PageQuery pageQuery) {
@@ -347,16 +354,27 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
 
     @Override
     public WfTaskProcess insertWfTaskProcess(String extraId, String type, String approved, String definitionId, String deploymentId) {
-        LambdaQueryWrapper<WfTaskProcess> qw = new LambdaQueryWrapper<>();
-        qw.eq(WfTaskProcess::getExtraId, extraId).eq(WfTaskProcess::getType, type);
-        WfTaskProcess wp = wfTaskProcessMapper.selectOne(qw);
+        ProjectTaskProcessDTO projectTaskProcessDTO = new ProjectTaskProcessDTO();
+        projectTaskProcessDTO.setExtraId(extraId);
+        projectTaskProcessDTO.setType(type);
+        R<WfTaskProcess> result = projectTaskProcessService.selectOne(projectTaskProcessDTO, SecurityConstants.INNER);
+        if (Objects.isNull(result) || Objects.isNull(result.getData())
+                || R.fail().equals(result.getData())) {
+            throw new ServiceException("远程调用项目服务失败");
+        }
+        WfTaskProcess wp = result.getData();
         if (wp != null) {
             wp.setApproved(approved);
             wp.setDefinitionId(definitionId);
             wp.setDeploymentId(deploymentId);
             wp.setUpdatedBy(SecurityUtils.getUsername());
             wp.setUpdatedTime(new Date());
-            wfTaskProcessMapper.updateById(wp);
+            BeanUtils.copyProperties(wp, projectTaskProcessDTO);
+            R<?> updateResult = projectTaskProcessService.updateById(projectTaskProcessDTO, SecurityConstants.INNER);
+            if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
+                    || R.fail().equals(updateResult.getData())) {
+                throw new ServiceException("远程调用项目服务失败");
+            }
             return wp;
         } else {
             WfTaskProcess wfTaskProcess = new WfTaskProcess();
@@ -364,7 +382,12 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
             wfTaskProcess.setType(type);
             wfTaskProcess.setApproved(approved);
             extracted(definitionId, deploymentId, wfTaskProcess);
-            wfTaskProcessMapper.insert(wfTaskProcess);
+            BeanUtils.copyProperties(wfTaskProcess, projectTaskProcessDTO);
+            R<?> updateResult = projectTaskProcessService.insert(projectTaskProcessDTO, SecurityConstants.INNER);
+            if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
+                    || R.fail().equals(updateResult.getData())) {
+                throw new ServiceException("远程调用项目服务失败");
+            }
             return wfTaskProcess;
         }
     }

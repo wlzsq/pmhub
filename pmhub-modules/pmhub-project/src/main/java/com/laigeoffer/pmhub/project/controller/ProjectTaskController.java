@@ -345,4 +345,13 @@ public class ProjectTaskController {
         return R.ok(projectTaskService.updateTaskProcess(projectTaskProcessDTO));
     }
 
+    /**
+     * 获取任务流程信息
+     */
+    @InnerAuth
+    @GetMapping("task/process/selectOne")
+    public R<ProjectTaskProcess> selectOne(ProjectTaskProcessDTO projectTaskProcessDTO) {
+        return R.ok(projectTaskService.selectOneTaskProcess(projectTaskProcessDTO));
+    }
+
 }

@@ -20,4 +20,12 @@ public class ProjectTaskProcessDTO {
      * 部署id
      */
     private String deploymentId;
+    /**
+     * 项目任务id
+     */
+    private String extraId;
+    /**
+     * 类型task/project等
+     */
+    private String type;
 }

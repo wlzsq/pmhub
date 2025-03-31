@@ -10,7 +10,12 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.laigeoffer.pmhub.api.project.ProjectTaskProcessService;
+import com.laigeoffer.pmhub.api.project.ProjectTaskService;
+import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.PageQuery;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
+import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysDept;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysRole;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysUser;
@@ -85,6 +90,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
     private final WfTaskProcessMapper wfTaskProcessMapper;
     private final IWfDeployService deployService;
     private final WfMaterialsScrappedProcessMapper wfMaterialsScrappedProcessMapper;
+    private final ProjectTaskService projectTaskService;
+    private final ProjectTaskProcessService projectTaskProcessService;
 //    private final MaterialsChangeRecordsMapper materialsChangeRecordsMapper;
 //    private final MaterialsUselessMapper materialsUselessMapper;
 
@@ -839,9 +846,15 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      * @return
      */
     private WfTaskProcess getWfTaskProcess(String extraId, String type) {
-        LambdaQueryWrapper<WfTaskProcess> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WfTaskProcess::getExtraId, extraId).eq(WfTaskProcess::getType, type);
-        WfTaskProcess wfTaskProcess = wfTaskProcessMapper.selectOne(queryWrapper);
+        ProjectTaskProcessDTO projectTaskProcessDTO = new ProjectTaskProcessDTO();
+        projectTaskProcessDTO.setExtraId(extraId);
+        projectTaskProcessDTO.setType(type);
+        R<WfTaskProcess> result = projectTaskProcessService.selectOne(projectTaskProcessDTO, SecurityConstants.INNER);
+        if (Objects.isNull(result) || Objects.isNull(result.getData())
+                || R.fail().equals(result.getData())) {
+            throw new ServiceException("远程调用项目服务失败");
+        }
+        WfTaskProcess wfTaskProcess = result.getData();
         MaterialsApprovalSetVO materialsApprovalSetVO;
         if (ProjectStatusEnum.TASK.getStatusName().equals(type)) {
             materialsApprovalSetVO = deployService.queryApprovalSet(type, extraId);
@@ -865,7 +878,11 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
                     }
                     if ("3".equals(list.get(0).getType())) {
                         // 将任务状态改为进行中
-                        wfTaskProcessMapper.updateTaskStatus3(extraId);
+                        R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
+                        if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
+                                || R.fail().equals(updateResult.getData())) {
+                            throw new ServiceException("远程调用项目服务失败");
+                        }
                     }
                 }
             }
@@ -878,7 +895,11 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
         } else {
             if (ProjectStatusEnum.PROJECT.getStatusName().equals(type) || ProjectStatusEnum.TASK.getStatusName().equals(type)) {
                 // 将任务状态改为进行中
-                wfTaskProcessMapper.updateTaskStatus3(extraId);
+                R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
+                if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
+                        || R.fail().equals(updateResult.getData())) {
+                    throw new ServiceException("远程调用项目服务失败");
+                }
             }
 //            if (types.contains(type)) {
 //                MaterialsChangeRecords materialsChangeRecords = materialsChangeRecordsMapper.selectById(extraId);
@@ -1091,7 +1112,16 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      */
     private void startTaskProcess(String taskId, ProcessDefinition procDef, String url, Map<String, Object> variables) {
         // 任务审批相关逻辑
-        Integer status = wfTaskProcessMapper.selectStatusByTaskId(taskId);
+        // 远程调用项目服务，查询任务执行状态
+        R<Integer> result = projectTaskService.selectStatusByTaskId(taskId, "execute_status", SecurityConstants.INNER);
+
+        if (Objects.isNull(result) || Objects.isNull(result.getData())
+                || R.fail().equals(result.getData())) {
+            throw new ServiceException("远程调用项目服务失败");
+        }
+
+        Integer status = result.getData();
+
         if (!ProjectTaskStatusEnum.FINISHED.getStatus().equals(status)) {
             throw new ServiceException("执行状态为已完成才能发起审批");
         }
