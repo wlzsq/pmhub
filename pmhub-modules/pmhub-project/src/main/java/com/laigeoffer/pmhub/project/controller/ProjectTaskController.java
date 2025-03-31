@@ -18,6 +18,7 @@ import com.laigeoffer.pmhub.base.security.annotation.InnerAuth;
 import com.laigeoffer.pmhub.base.security.annotation.RequiresPermissions;
 import com.laigeoffer.pmhub.project.domain.Project;
 import com.laigeoffer.pmhub.project.domain.ProjectTask;
+import com.laigeoffer.pmhub.project.domain.ProjectTaskProcess;
 import com.laigeoffer.pmhub.project.domain.vo.project.ProjectVO;
 import com.laigeoffer.pmhub.project.domain.vo.project.log.LogReqVO;
 import com.laigeoffer.pmhub.project.domain.vo.project.task.*;
@@ -93,21 +94,11 @@ public class ProjectTaskController {
             throw new ServiceException("[" + projectMsg.substring(0, projectMsg.toString().length() - 1) + "]" + "归属项目已暂停，无法删除任务");
         }
         Map<String, List<ProjectTask>> collect = projectTasks.stream().collect(Collectors.groupingBy(ProjectTask::getId));
-        // 审批相关流程远程调用
-        R<?> result = wfDeployService.selectList(taskIdsVO.getTaskIdList(),SecurityConstants.INNER);
-        // 判断
-        if (StringUtils.isNull(result) || StringUtils.isNull(result.getData())) {
-            return AjaxResult.error("审批流程不存在");
-        }
-
-        if (R.FAIL == result.getCode()) {
-            return AjaxResult.error("查询流程服务异常");
-        }
-
-        List<WfTaskProcess> wfTaskProcesses = (List<WfTaskProcess>) result.getData();
-        if (CollectionUtils.isNotEmpty(wfTaskProcesses)) {
+        // 判断是否有审批流程，如果有则不允许删除
+        List<ProjectTaskProcess> projectTaskProcesses = projectTaskService.taskProcessList(taskIdsVO.getTaskIdList());
+        if (CollectionUtils.isNotEmpty(projectTaskProcesses)) {
             StringBuilder msg = new StringBuilder();
-            for (WfTaskProcess projectTaskProcess : wfTaskProcesses) {
+            for (ProjectTaskProcess projectTaskProcess : projectTaskProcesses) {
                 if (StringUtils.isNotBlank(projectTaskProcess.getInstanceId())) {
                     msg.append(collect.get(projectTaskProcess.getExtraId()).get(0).getTaskName()).append(",");
                 }
@@ -115,7 +106,6 @@ public class ProjectTaskController {
             if (StringUtils.isNotBlank(msg.toString())) {
                 throw new ServiceException("[" + msg.substring(0, msg.toString().length() - 1) + "]" + "存在审批流程，不允许删除");
             }
-
         }
         projectTaskService.deleteTask(taskIdsVO);
         return AjaxResult.success();

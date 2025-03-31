@@ -36,7 +36,6 @@ public interface IWfDeployService {
     WfTaskProcess insertWfTaskProcess(String extraId, String type, String approved, String definitionId, String deploymentId);
     boolean insertOrUpdateApprovalSet(String extraId, String type, String approved, String definitionId, String deploymentId);
     List<WfMaterialsScrappedProcess> insertScrappedProcess(List<String> ids, MaterialsApprovalSetVO materialsApprovalSetVO);
-    List<WfTaskProcess> selectList(List<String> taskId);
     List<WfTaskProcess> selectWfTaskProcessList(List<String> extraId, String type);
     void updateProviderApproval(String providerId);
     List<WfMaterialsScrappedProcess> selectScrappedList(List<String> ids);

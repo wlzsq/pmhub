@@ -140,17 +140,6 @@ public class WfDeployController extends BaseController {
     }
 
     /**
-     * 查询流程部署关联表单信息
-     * @param taskId
-     * @return
-     */
-    @InnerAuth
-    @GetMapping("/selectList")
-    public R<?> selectList(List<String> taskId) {
-        return R.ok(deployService.selectList(taskId));
-    }
-
-    /**
      * 添加&更新审批设置
      * @param approvalSetDTO
      * @return

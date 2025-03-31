@@ -3,6 +3,7 @@ package com.laigeoffer.pmhub.project.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.github.pagehelper.PageInfo;
 import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
+import com.laigeoffer.pmhub.project.domain.ProjectTaskProcess;
 import com.laigeoffer.pmhub.project.domain.vo.project.ProjectVO;
 import com.laigeoffer.pmhub.project.domain.vo.project.log.LogReqVO;
 import com.laigeoffer.pmhub.project.domain.vo.project.log.ProjectLogVO;
@@ -80,4 +81,6 @@ public interface ProjectTaskService extends IService<ProjectTask> {
     List<Project> queryProjectsStatus(List<String> projectIds);
 
     int updateTaskProcess(ProjectTaskProcessDTO projectTaskProcessDTO);
+
+    List<ProjectTaskProcess> taskProcessList(List<String> taskIds);
 }

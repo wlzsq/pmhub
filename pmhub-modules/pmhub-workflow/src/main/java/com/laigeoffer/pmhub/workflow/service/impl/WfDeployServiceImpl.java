@@ -427,14 +427,6 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
     }
 
     @Override
-    public List<WfTaskProcess> selectList(List<String> taskId) {
-        // 查询是否存在关联关系
-        LambdaQueryWrapper<WfTaskProcess> qw = new LambdaQueryWrapper<>();
-        qw.in(WfTaskProcess::getExtraId, taskId);
-        return wfTaskProcessMapper.selectList(qw);
-    }
-
-    @Override
     public List<WfTaskProcess> selectWfTaskProcessList(List<String> extraId, String type) {
         List<WfTaskProcess> list = new ArrayList<>(10);
         if (CollectionUtils.isNotEmpty(extraId)) {
