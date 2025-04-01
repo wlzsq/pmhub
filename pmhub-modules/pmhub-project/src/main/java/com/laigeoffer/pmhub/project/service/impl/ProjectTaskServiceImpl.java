@@ -948,5 +948,42 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
         return projectTaskProcessMapper.selectOne(queryWrapper);
     }
 
+    @Override
+    public int updateTaskProcessById(ProjectTaskProcessDTO projectTaskProcessDTO) {
+        ProjectTaskProcess projectTaskProcess = new ProjectTaskProcess();
+        BeanUtils.copyProperties(projectTaskProcessDTO, projectTaskProcess);
+        projectTaskProcess.setUpdatedBy(SecurityUtils.getUsername());
+        projectTaskProcess.setUpdatedTime(new Date());
+        return projectTaskProcessMapper.updateById(projectTaskProcess);
+    }
+
+    @Override
+    public int insertTaskProcess(ProjectTaskProcessDTO projectTaskProcessDTO) {
+        ProjectTaskProcess projectTaskProcess = new ProjectTaskProcess();
+        BeanUtils.copyProperties(projectTaskProcessDTO, projectTaskProcess);
+        projectTaskProcess.setCreatedBy(SecurityUtils.getUsername());
+        projectTaskProcess.setCreatedTime(new Date());
+        projectTaskProcess.setUpdatedBy(SecurityUtils.getUsername());
+        projectTaskProcess.setUpdatedTime(new Date());
+        return projectTaskProcessMapper.insert(projectTaskProcess);
+    }
+
+    @Override
+    public Integer selectTaskProcessStatus(String taskId, String type) {
+        if ("execute_status".equals(type)) {
+            return projectTaskMapper.selectStatusByTaskId(taskId);
+        } else if ("status".equals(type)) {
+            return projectTaskMapper.selectStatusByTaskId2(taskId);
+        }
+        return 0;
+    }
+
+    @Override
+    public int updateTaskProcessStatus3(String extraId) {
+        LambdaUpdateWrapper<ProjectTask> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.eq(ProjectTask::getId, extraId).set(ProjectTask::getStatus, 1);
+        return projectTaskMapper.update(null, updateWrapper);
+    }
+
 
 }

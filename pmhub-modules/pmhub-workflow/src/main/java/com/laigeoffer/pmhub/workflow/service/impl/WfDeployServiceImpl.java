@@ -13,6 +13,7 @@ import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
 import com.laigeoffer.pmhub.base.core.core.page.Table2DataInfo;
 import com.laigeoffer.pmhub.base.core.enums.ProjectStatusEnum;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
+import com.laigeoffer.pmhub.base.core.utils.ResultUtils;
 import com.laigeoffer.pmhub.base.core.utils.bean.BeanUtils;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
@@ -358,11 +359,7 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
         projectTaskProcessDTO.setExtraId(extraId);
         projectTaskProcessDTO.setType(type);
         R<WfTaskProcess> result = projectTaskProcessService.selectOne(projectTaskProcessDTO, SecurityConstants.INNER);
-        if (Objects.isNull(result) || Objects.isNull(result.getData())
-                || R.fail().equals(result.getData())) {
-            throw new ServiceException("远程调用项目服务失败");
-        }
-        WfTaskProcess wp = result.getData();
+        WfTaskProcess wp = ResultUtils.result(result, "远程调用项目服务失败");
         if (wp != null) {
             wp.setApproved(approved);
             wp.setDefinitionId(definitionId);
@@ -371,10 +368,7 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
             wp.setUpdatedTime(new Date());
             BeanUtils.copyProperties(wp, projectTaskProcessDTO);
             R<?> updateResult = projectTaskProcessService.updateById(projectTaskProcessDTO, SecurityConstants.INNER);
-            if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
-                    || R.fail().equals(updateResult.getData())) {
-                throw new ServiceException("远程调用项目服务失败");
-            }
+            ResultUtils.result(updateResult, "远程调用项目服务失败");
             return wp;
         } else {
             WfTaskProcess wfTaskProcess = new WfTaskProcess();
@@ -384,10 +378,7 @@ public class WfDeployServiceImpl extends FlowServiceFactory implements IWfDeploy
             extracted(definitionId, deploymentId, wfTaskProcess);
             BeanUtils.copyProperties(wfTaskProcess, projectTaskProcessDTO);
             R<?> updateResult = projectTaskProcessService.insert(projectTaskProcessDTO, SecurityConstants.INNER);
-            if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
-                    || R.fail().equals(updateResult.getData())) {
-                throw new ServiceException("远程调用项目服务失败");
-            }
+            ResultUtils.result(updateResult, "远程调用项目服务失败");
             return wfTaskProcess;
         }
     }

@@ -354,4 +354,28 @@ public class ProjectTaskController {
         return R.ok(projectTaskService.selectOneTaskProcess(projectTaskProcessDTO));
     }
 
+    @InnerAuth
+    @PutMapping("/task/process/updateById")
+    public R<?> updateTaskProcessById(@RequestBody ProjectTaskProcessDTO projectTaskProcessDTO) {
+        return R.ok(projectTaskService.updateTaskProcessById(projectTaskProcessDTO));
+    }
+
+    @InnerAuth
+    @PostMapping("/task/process/insert")
+    public R<?> insertTaskProcess(@RequestBody ProjectTaskProcessDTO projectTaskProcessDTO) {
+        return R.ok(projectTaskService.insertTaskProcess(projectTaskProcessDTO));
+    }
+
+    @InnerAuth
+    @GetMapping("/task/status")
+    public R<Integer> selectTaskProcess(String taskId, @RequestParam(value = "type") String type) {
+        return R.ok(projectTaskService.selectTaskProcessStatus(taskId, type));
+    }
+
+    @InnerAuth
+    @PutMapping("/task/status")
+    public R<?> updateTaskProcessStatus3(String extraId) {
+        return R.ok(projectTaskService.updateTaskProcessStatus3(extraId));
+    }
+
 }

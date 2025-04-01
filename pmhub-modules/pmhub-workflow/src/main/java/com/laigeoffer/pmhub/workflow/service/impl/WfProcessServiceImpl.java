@@ -25,6 +25,7 @@ import com.laigeoffer.pmhub.base.core.enums.ProjectTaskStatusEnum;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
 import com.laigeoffer.pmhub.base.core.utils.DateUtils;
 import com.laigeoffer.pmhub.base.core.utils.JsonUtils;
+import com.laigeoffer.pmhub.base.core.utils.ResultUtils;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
 import com.laigeoffer.pmhub.workflow.common.constant.ProcessConstants;
@@ -850,11 +851,7 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
         projectTaskProcessDTO.setExtraId(extraId);
         projectTaskProcessDTO.setType(type);
         R<WfTaskProcess> result = projectTaskProcessService.selectOne(projectTaskProcessDTO, SecurityConstants.INNER);
-        if (Objects.isNull(result) || Objects.isNull(result.getData())
-                || R.fail().equals(result.getData())) {
-            throw new ServiceException("远程调用项目服务失败");
-        }
-        WfTaskProcess wfTaskProcess = result.getData();
+        WfTaskProcess wfTaskProcess = ResultUtils.result(result, "远程调用项目服务失败");
         MaterialsApprovalSetVO materialsApprovalSetVO;
         if (ProjectStatusEnum.TASK.getStatusName().equals(type)) {
             materialsApprovalSetVO = deployService.queryApprovalSet(type, extraId);
@@ -879,10 +876,7 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
                     if ("3".equals(list.get(0).getType())) {
                         // 将任务状态改为进行中
                         R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
-                        if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
-                                || R.fail().equals(updateResult.getData())) {
-                            throw new ServiceException("远程调用项目服务失败");
-                        }
+                        ResultUtils.result(updateResult, "远程调用项目服务失败");
                     }
                 }
             }
@@ -896,10 +890,7 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
             if (ProjectStatusEnum.PROJECT.getStatusName().equals(type) || ProjectStatusEnum.TASK.getStatusName().equals(type)) {
                 // 将任务状态改为进行中
                 R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
-                if (Objects.isNull(updateResult) || Objects.isNull(updateResult.getData())
-                        || R.fail().equals(updateResult.getData())) {
-                    throw new ServiceException("远程调用项目服务失败");
-                }
+                ResultUtils.result(updateResult, "远程调用项目服务失败");
             }
 //            if (types.contains(type)) {
 //                MaterialsChangeRecords materialsChangeRecords = materialsChangeRecordsMapper.selectById(extraId);

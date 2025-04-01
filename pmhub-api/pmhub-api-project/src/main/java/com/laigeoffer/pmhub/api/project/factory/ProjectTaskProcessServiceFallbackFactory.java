@@ -3,6 +3,7 @@ package com.laigeoffer.pmhub.api.project.factory;
 import com.laigeoffer.pmhub.api.project.ProjectTaskProcessService;
 import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.dto.ProjectTaskProcessDTO;
+import com.laigeoffer.pmhub.base.core.core.domain.entity.WfTaskProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -19,6 +20,21 @@ public class ProjectTaskProcessServiceFallbackFactory implements FallbackFactory
             @Override
             public R<?> updateProjectTaskProcess(ProjectTaskProcessDTO projectTaskProcessDTO, String source) {
                 return R.fail("项目任务流程更新失败:" + throwable.getMessage());
+            }
+
+            @Override
+            public R<WfTaskProcess> selectOne(ProjectTaskProcessDTO projectTaskProcessDTO, String source) {
+                return R.fail("项目任务流程查询失败:" + throwable.getMessage());
+            }
+
+            @Override
+            public R<?> updateById(ProjectTaskProcessDTO projectTaskProcessDTO, String source) {
+                return R.fail("项目任务更新失败:" + throwable.getMessage());
+            }
+
+            @Override
+            public R<?> insert(ProjectTaskProcessDTO projectTaskProcessDTO, String inner) {
+                return R.fail("项目任务流程插入失败:" + throwable.getMessage());
             }
         };
     }
