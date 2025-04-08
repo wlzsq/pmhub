@@ -342,6 +342,12 @@
                 <version>${laigeoffer.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.laigeoffer.pmhub-cloud</groupId>
+                <artifactId>pmhub-api-project</artifactId>
+                <version>${laigeoffer.version}</version>
+            </dependency>
+
             <!-- knife4j -->
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>

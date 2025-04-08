@@ -51,4 +51,9 @@ public class ProjectTaskProcess implements Serializable {
 
     private String type;
 
+    /**
+     * 原流程定义id
+     */
+    private String originDefinitionId;
+
 }

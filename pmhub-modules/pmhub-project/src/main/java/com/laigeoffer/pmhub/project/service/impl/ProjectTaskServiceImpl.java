@@ -2,6 +2,8 @@ package com.laigeoffer.pmhub.project.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.github.pagehelper.PageHelper;
@@ -75,6 +77,8 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
     private QueryTaskLogFactory queryTaskLogFactory;
     @Autowired
     private ProjectFileMapper projectFileMapper;
+    @Autowired
+    private ProjectTaskProcessMapper projectTaskProcessMapper;
 
     // 远程调用流程服务
     @Resource
@@ -916,6 +920,17 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
     @Override
     public List<Project> queryProjectsStatus(List<String> projectIds) {
         return projectTaskMapper.queryProjectsStatus(projectIds);
+    }
+
+    @Override
+    public int updateTaskProcess(ProjectTaskProcess projectTaskProcess) {
+        LambdaUpdateWrapper<ProjectTaskProcess> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.likeRight(ProjectTaskProcess::getDefinitionId, projectTaskProcess.getOriginDefinitionId())
+                .eq(ProjectTaskProcess::getApproved, projectTaskProcess.getApproved())
+                .isNull(ProjectTaskProcess::getInstanceId)
+                .set(ProjectTaskProcess::getDefinitionId, projectTaskProcess.getDefinitionId())
+                .set(ProjectTaskProcess::getDeploymentId, projectTaskProcess.getDeploymentId());
+        return projectTaskProcessMapper.update(null, updateWrapper);
     }
 
 }
