@@ -78,6 +78,18 @@
             <artifactId>pmhub-base-swagger</artifactId>
         </dependency>
 
+        <!-- pmhub-api-project -->
+        <dependency>
+            <groupId>com.laigeoffer.pmhub-cloud</groupId>
+            <artifactId>pmhub-api-project</artifactId>
+        </dependency>
+
+        <!--添加分布式事务-->
+        <dependency>
+            <groupId>com.laigeoffer.pmhub-cloud</groupId>
+            <artifactId>pmhub-base-seata</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.googlecode.aviator</groupId>

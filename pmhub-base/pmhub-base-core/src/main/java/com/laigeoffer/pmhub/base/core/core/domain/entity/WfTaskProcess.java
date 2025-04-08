@@ -56,5 +56,10 @@ public class WfTaskProcess implements Serializable {
     @TableField(value = "url", updateStrategy = FieldStrategy.IGNORED)
     private String url;
 
+    /**
+     * 原流程定义id
+     */
+    private String originDefinitionId;
+
 
 }

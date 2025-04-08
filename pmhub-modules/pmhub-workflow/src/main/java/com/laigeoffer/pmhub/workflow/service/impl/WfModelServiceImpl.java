@@ -5,7 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.laigeoffer.pmhub.api.project.ProjectTaskService;
+import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.PageQuery;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.page.Table2DataInfo;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
 import com.laigeoffer.pmhub.base.core.utils.JsonUtils;
@@ -31,6 +34,7 @@ import com.laigeoffer.pmhub.workflow.service.IWfDeployFormService;
 import com.laigeoffer.pmhub.workflow.service.IWfFormService;
 import com.laigeoffer.pmhub.workflow.service.IWfModelService;
 import com.laigeoffer.pmhub.workflow.utils.ModelUtils;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -47,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author canghe
@@ -63,6 +68,7 @@ public class WfModelServiceImpl extends FlowServiceFactory implements IWfModelSe
     private final WfTaskProcessMapper wfTaskProcessMapper;
     private final WfMaterialsScrappedProcessMapper wfMaterialsScrappedProcessMapper;
     private final WfApprovalSetMapper wfApprovalSetMapper;
+    private final ProjectTaskService projectTaskService;
 
     @Override
     public Table2DataInfo<WfModelVo> list(WfModelBo modelBo, PageQuery pageQuery) {
@@ -394,7 +400,7 @@ public class WfModelServiceImpl extends FlowServiceFactory implements IWfModelSe
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @GlobalTransactional(name = "pmhub-workflow-deployModel",rollbackFor = Exception.class)
     public boolean deployModel(String modelId) {
         // 获取流程模型
         Model model = repositoryService.getModel(modelId);
@@ -417,12 +423,16 @@ public class WfModelServiceImpl extends FlowServiceFactory implements IWfModelSe
         ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionKey(model.getKey())
                 .latestVersion().singleResult();
         // 更新审批设置
-        LambdaUpdateChainWrapper<WfTaskProcess> wfTaskProcess = new LambdaUpdateChainWrapper<>(wfTaskProcessMapper);
-        wfTaskProcess.likeRight(WfTaskProcess::getDefinitionId, model.getKey()).eq(WfTaskProcess::getApproved, 0)
-                .isNull(WfTaskProcess::getInstanceId)
-                .set(WfTaskProcess::getDefinitionId, processDefinition.getId())
-                .set(WfTaskProcess::getDeploymentId, processDefinition.getDeploymentId());
-        wfTaskProcess.update();
+        WfTaskProcess wfTaskProcess = new WfTaskProcess();
+        wfTaskProcess.setOriginDefinitionId(model.getKey());
+        wfTaskProcess.setDefinitionId(processDefinition.getId());
+        wfTaskProcess.setDeploymentId(processDefinition.getDeploymentId());
+        wfTaskProcess.setApproved("0");
+        R<?> result = projectTaskService.updateProjectTaskProcess(wfTaskProcess, SecurityConstants.INNER);
+        if (Objects.isNull(result) || Objects.isNull(result.getData())
+                || R.fail().equals(result.getData())) {
+            throw new ServiceException("远程调用项目服务失败");
+        }
         LambdaUpdateChainWrapper<WfApprovalSet> materialsApprovalSet = new LambdaUpdateChainWrapper<>(wfApprovalSetMapper);
         materialsApprovalSet.likeRight(WfApprovalSet::getDefinitionId, model.getKey())
                 .set(WfApprovalSet::getDefinitionId, processDefinition.getId())

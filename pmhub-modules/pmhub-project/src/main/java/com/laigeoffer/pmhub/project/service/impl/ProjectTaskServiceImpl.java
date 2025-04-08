@@ -2,6 +2,7 @@ package com.laigeoffer.pmhub.project.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -926,6 +927,17 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
         LambdaQueryWrapper<ProjectTaskProcess> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.in(ProjectTaskProcess::getExtraId, taskIds);
         return projectTaskProcessMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public int updateTaskProcess(ProjectTaskProcess projectTaskProcess) {
+        LambdaUpdateWrapper<ProjectTaskProcess> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.likeRight(ProjectTaskProcess::getDefinitionId, projectTaskProcess.getOriginDefinitionId())
+                .eq(ProjectTaskProcess::getApproved, projectTaskProcess.getApproved())
+                .isNull(ProjectTaskProcess::getInstanceId)
+                .set(ProjectTaskProcess::getDefinitionId, projectTaskProcess.getDefinitionId())
+                .set(ProjectTaskProcess::getDeploymentId, projectTaskProcess.getDeploymentId());
+        return projectTaskProcessMapper.update(null, updateWrapper);
     }
 
 }

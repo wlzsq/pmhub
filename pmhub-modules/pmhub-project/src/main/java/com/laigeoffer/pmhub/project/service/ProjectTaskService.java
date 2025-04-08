@@ -81,4 +81,6 @@ public interface ProjectTaskService extends IService<ProjectTask> {
 
     List<ProjectTaskProcess> taskProcessList(List<String> taskIds);
 
+    int updateTaskProcess(ProjectTaskProcess projectTaskProcess);
+
 }
