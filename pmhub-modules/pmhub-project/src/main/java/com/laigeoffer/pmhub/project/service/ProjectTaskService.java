@@ -83,4 +83,13 @@ public interface ProjectTaskService extends IService<ProjectTask> {
 
     int updateTaskProcess(ProjectTaskProcess projectTaskProcess);
 
+    Integer selectStatusByTaskId(String taskId, String type);
+
+    int updateTaskStatus3(String extraId);
+
+    ProjectTaskProcess selectTaskProcess(String taskId, String type);
+
+    int updateTaskProcessById(ProjectTaskProcess projectTaskProcess);
+
+    String insertTaskProcess(ProjectTaskProcess projectTaskProcess);
 }

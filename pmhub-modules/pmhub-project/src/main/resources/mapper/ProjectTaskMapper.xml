@@ -149,4 +149,10 @@
             </foreach>
         </if>
     </select>
+    <select id="selectStatusByTaskId" resultType="java.lang.Integer">
+        select execute_status from pmhub_project_task where id = #{taskId}
+    </select>
+    <select id="selectStatusByTaskId2" resultType="java.lang.Integer">
+        select status from pmhub_project_task where id = #{taskId}
+    </select>
 </mapper>

@@ -36,19 +36,19 @@ public class GlobalProcessStartedListener extends AbstractFlowableEngineEventLis
         LogFactory.get().info("进入流程开始监听器------------------------Start---------------------->");
 
 
-        FlowableEntityEventImpl flowableEntityEvent = (FlowableEntityEventImpl) event;
-        ExecutionEntityImpl processInstance = (ExecutionEntityImpl) flowableEntityEvent.getEntity();
+//        FlowableEntityEventImpl flowableEntityEvent = (FlowableEntityEventImpl) event;
+//        ExecutionEntityImpl processInstance = (ExecutionEntityImpl) flowableEntityEvent.getEntity();
 
         // 获取申请人的微信
-        SysUser sysUser = wfCopyMapper.selectUserById(Long.parseLong(processInstance.getVariable(BpmnXMLConstants.ATTRIBUTE_EVENT_START_INITIATOR).toString()));
-        String createWxName = sysUser.getUserWxName();
+//        SysUser sysUser = wfCopyMapper.selectUserById(Long.parseLong(processInstance.getVariable(BpmnXMLConstants.ATTRIBUTE_EVENT_START_INITIATOR).toString()));
+//        String createWxName = sysUser.getUserWxName();
+//
+//        if (StringUtils.isNotEmpty(createWxName)){
+//            List<String> userIds = new ArrayList<>();
+//            userIds.add(createWxName);
 
-        if (StringUtils.isNotEmpty(createWxName)){
-            List<String> userIds = new ArrayList<>();
-            userIds.add(createWxName);
 
-
-            String url = "/work/own";
+//            String url = "/work/own";
             // TODO: 2024.04.25 关闭企微暂时 
 //            // 详情跳转地址
 //            String processUrl =  SsoUrlUtils.ssoCreate(appid,agentid, host+path+"/sso/wx?url="+ URLEncoder.encode(host+url));
@@ -63,7 +63,7 @@ public class GlobalProcessStartedListener extends AbstractFlowableEngineEventLis
 //            );
 //            processReturnDTO.setUserIds(userIds);
 //            RocketMqUtils.push2Wx(processReturnDTO);
-        }
+//        }
 
 
 

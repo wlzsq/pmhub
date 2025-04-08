@@ -22,11 +22,14 @@ public class ProjectTaskProcess implements Serializable {
     private String id;
     private String approved;
     private String extraId;
+    @TableField(value = "instance_id", updateStrategy = FieldStrategy.IGNORED)
     private String instanceId;
     @TableField(value = "deployment_id", updateStrategy = FieldStrategy.IGNORED)
     private String deploymentId;
     @TableField(value = "definition_id", updateStrategy = FieldStrategy.IGNORED)
     private String definitionId;
+    @TableField(value = "task_id", updateStrategy = FieldStrategy.IGNORED)
+    private String taskId;
     /**
      * 创建人
      */
@@ -51,9 +54,13 @@ public class ProjectTaskProcess implements Serializable {
 
     private String type;
 
+    @TableField(value = "url", updateStrategy = FieldStrategy.IGNORED)
+    private String url;
+
     /**
      * 原流程定义id
      */
+    @TableField(exist = false)
     private String originDefinitionId;
 
 }

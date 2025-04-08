@@ -345,4 +345,34 @@ public class ProjectTaskController {
         return R.ok(projectTaskService.updateTaskProcess(projectTaskProcess));
     }
 
+    @InnerAuth
+    @GetMapping("/task/status")
+    public R<Integer> selectStatusByTaskId(@RequestParam("taskId") String taskId, @RequestParam(value = "type") String type) {
+        return R.ok(projectTaskService.selectStatusByTaskId(taskId, type));
+    }
+
+    @InnerAuth
+    @PutMapping("/task/updateTaskStatus3")
+    public R<?> updateTaskStatus3(String extraId) {
+        return R.ok(projectTaskService.updateTaskStatus3(extraId));
+    }
+
+    @InnerAuth
+    @GetMapping("/task/selectTaskProcess")
+    public R<ProjectTaskProcess> selectTaskProcess(@RequestParam("extraId") String taskId, @RequestParam(value = "type") String type) {
+        return R.ok(projectTaskService.selectTaskProcess(taskId, type));
+    }
+
+    @InnerAuth
+    @PutMapping("/task/updateTaskProcessById")
+    public R<?> updateTaskProcessById(@RequestBody ProjectTaskProcess projectTaskProcess) {
+        return R.ok(projectTaskService.updateTaskProcessById(projectTaskProcess));
+    }
+
+    @InnerAuth
+    @PostMapping("/task/insertTaskProcess")
+    public R<String> insertTaskProcess(@RequestBody ProjectTaskProcess projectTaskProcess) {
+        return R.ok("任务流程添加成功", projectTaskService.insertTaskProcess(projectTaskProcess));
+    }
+
 }

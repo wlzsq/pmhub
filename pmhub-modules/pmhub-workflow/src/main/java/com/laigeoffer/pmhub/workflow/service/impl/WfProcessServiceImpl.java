@@ -10,15 +10,21 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.laigeoffer.pmhub.api.project.ProjectTaskService;
+import com.laigeoffer.pmhub.api.system.UserFeignService;
+import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.PageQuery;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysDept;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysRole;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysUser;
+import com.laigeoffer.pmhub.base.core.core.domain.model.LoginUser;
 import com.laigeoffer.pmhub.base.core.core.page.Table2DataInfo;
 import com.laigeoffer.pmhub.base.core.enums.ProjectStatusEnum;
 import com.laigeoffer.pmhub.base.core.enums.ProjectTaskStatusEnum;
 import com.laigeoffer.pmhub.base.core.exception.ServiceException;
 import com.laigeoffer.pmhub.base.core.utils.DateUtils;
+import com.laigeoffer.pmhub.base.core.utils.FeignResultUtils;
 import com.laigeoffer.pmhub.base.core.utils.JsonUtils;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
@@ -43,6 +49,7 @@ import com.laigeoffer.pmhub.workflow.utils.ModelUtils;
 import com.laigeoffer.pmhub.workflow.utils.ProcessFormUtils;
 import com.laigeoffer.pmhub.workflow.utils.ProcessUtils;
 import com.laigeoffer.pmhub.workflow.utils.TaskUtils;
+import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flowable.bpmn.constants.BpmnXMLConstants;
@@ -87,6 +94,11 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
     private final WfMaterialsScrappedProcessMapper wfMaterialsScrappedProcessMapper;
 //    private final MaterialsChangeRecordsMapper materialsChangeRecordsMapper;
 //    private final MaterialsUselessMapper materialsUselessMapper;
+
+    // 项目服务
+    private final ProjectTaskService projectTaskService;
+    // 系统服务
+    private final UserFeignService userFeignService;
 
     private final String USELESS = "报废";
     private final String DAI_DING = "待定";
@@ -638,7 +650,7 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      * @return
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @GlobalTransactional(name = "pmhub-workflow-startTaskProcessByDefId", rollbackFor = Exception.class)
     public void startTaskProcessByDefId(String taskId, String procDefId, String url, Map<String, Object> variables) {
         ProcessDefinition processDefinition = getProcessDefinition(procDefId);
         startTaskProcess(taskId, processDefinition, url, variables);
@@ -839,9 +851,9 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      * @return
      */
     private WfTaskProcess getWfTaskProcess(String extraId, String type) {
-        LambdaQueryWrapper<WfTaskProcess> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(WfTaskProcess::getExtraId, extraId).eq(WfTaskProcess::getType, type);
-        WfTaskProcess wfTaskProcess = wfTaskProcessMapper.selectOne(queryWrapper);
+        // 远程调用查询任务流程
+        R<WfTaskProcess> result = projectTaskService.selectTaskProcess(extraId, type, SecurityConstants.INNER);
+        WfTaskProcess wfTaskProcess = Objects.isNull(result) ? null : result.getData();
         MaterialsApprovalSetVO materialsApprovalSetVO;
         if (ProjectStatusEnum.TASK.getStatusName().equals(type)) {
             materialsApprovalSetVO = deployService.queryApprovalSet(type, extraId);
@@ -865,7 +877,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
                     }
                     if ("3".equals(list.get(0).getType())) {
                         // 将任务状态改为进行中
-                        wfTaskProcessMapper.updateTaskStatus3(extraId);
+                        R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
+                        FeignResultUtils.getResultByObjectsCheck(updateResult, "更新任务审批状态失败");
                     }
                 }
             }
@@ -878,7 +891,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
         } else {
             if (ProjectStatusEnum.PROJECT.getStatusName().equals(type) || ProjectStatusEnum.TASK.getStatusName().equals(type)) {
                 // 将任务状态改为进行中
-                wfTaskProcessMapper.updateTaskStatus3(extraId);
+                R<?> updateResult = projectTaskService.updateTaskStatus3(extraId, SecurityConstants.INNER);
+                FeignResultUtils.getResultByObjectsCheck(updateResult, "更新任务审批状态失败");
             }
 //            if (types.contains(type)) {
 //                MaterialsChangeRecords materialsChangeRecords = materialsChangeRecordsMapper.selectById(extraId);
@@ -943,7 +957,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
             }
         }
         wfTaskProcess.setUrl(url);
-        wfTaskProcessMapper.updateById(wfTaskProcess);
+        R<?> result = projectTaskService.updateTaskProcessById(wfTaskProcess, SecurityConstants.INNER);
+        FeignResultUtils.getResultByObjectsCheck(result, "更新任务流程信息失败");
     }
 
     /**
@@ -990,7 +1005,9 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      * @param userId
      */
     private void queryLeaderId(Map<String, Object> variables, Long userId) {
-        SysUser sysUser = wfCopyMapper.selectUserById(userId);
+        R<LoginUser> result = userFeignService.getInfoByUserId(userId, SecurityConstants.INNER);
+        LoginUser loginUser = FeignResultUtils.getResultByObjectsCheck(result, "查询用户信息失败");
+        SysUser sysUser = loginUser.getUser();
         if (StringUtils.isNotBlank(sysUser.getLeaderId())) {
             // 直属上级
             variables.put(ProcessUtils.LEADER_LIST, Arrays.asList(sysUser.getLeaderId().split(",")));
@@ -1091,7 +1108,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
      */
     private void startTaskProcess(String taskId, ProcessDefinition procDef, String url, Map<String, Object> variables) {
         // 任务审批相关逻辑
-        Integer status = wfTaskProcessMapper.selectStatusByTaskId(taskId);
+        R<Integer> result = projectTaskService.selectStatusByTaskId(taskId, "execute_status", SecurityConstants.INNER);
+        Integer status = FeignResultUtils.getResultByObjectsCheck(result, "远程调用项目服务失败");
         if (!ProjectTaskStatusEnum.FINISHED.getStatus().equals(status)) {
             throw new ServiceException("执行状态为已完成才能发起审批");
         }

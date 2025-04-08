@@ -90,6 +90,11 @@
             <artifactId>pmhub-base-seata</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.laigeoffer.pmhub-cloud</groupId>
+            <artifactId>pmhub-api-system</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.googlecode.aviator</groupId>

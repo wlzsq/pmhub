@@ -940,4 +940,39 @@ public class ProjectTaskServiceImpl extends ServiceImpl<ProjectTaskMapper, Proje
         return projectTaskProcessMapper.update(null, updateWrapper);
     }
 
+    @Override
+    public Integer selectStatusByTaskId(String taskId, String type) {
+        if ("execute_status".equals(type)) {
+            return projectTaskMapper.selectStatusByTaskId(taskId);
+        } else if ("status".equals(type)) {
+            return projectTaskMapper.selectStatusByTaskId2(taskId);
+        }
+        return 0;
+    }
+
+    @Override
+    public int updateTaskStatus3(String extraId) {
+        LambdaUpdateWrapper<ProjectTask> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.eq(ProjectTask::getId, extraId).set(ProjectTask::getStatus, 1);
+        return projectTaskMapper.update(null, updateWrapper);
+    }
+
+    @Override
+    public ProjectTaskProcess selectTaskProcess(String taskId, String type) {
+        LambdaQueryWrapper<ProjectTaskProcess> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(ProjectTaskProcess::getExtraId, taskId).eq(ProjectTaskProcess::getType, type);
+        return projectTaskProcessMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public int updateTaskProcessById(ProjectTaskProcess projectTaskProcess) {
+        return projectTaskProcessMapper.updateById(projectTaskProcess);
+    }
+
+    @Override
+    public String insertTaskProcess(ProjectTaskProcess projectTaskProcess) {
+        projectTaskProcessMapper.insert(projectTaskProcess);
+        return projectTaskProcess.getId();
+    }
+
 }
