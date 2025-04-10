@@ -4,9 +4,11 @@ import com.laigeoffer.pmhub.base.core.annotation.Log;
 import com.laigeoffer.pmhub.base.core.constant.UserConstants;
 import com.laigeoffer.pmhub.base.core.core.controller.BaseController;
 import com.laigeoffer.pmhub.base.core.core.domain.AjaxResult;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysDept;
 import com.laigeoffer.pmhub.base.core.enums.BusinessType;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
+import com.laigeoffer.pmhub.base.security.annotation.InnerAuth;
 import com.laigeoffer.pmhub.base.security.annotation.RequiresPermissions;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
 import com.laigeoffer.pmhub.system.service.ISysDeptService;
@@ -108,5 +110,11 @@ public class SysDeptController extends BaseController {
         }
         deptService.checkDeptDataScope(deptId);
         return toAjax(deptService.deleteDeptById(deptId));
+    }
+
+    @InnerAuth
+    @GetMapping("/getDeptNameById")
+    public R<SysDept> getDeptNameById(@RequestParam("deptId") Long deptId) {
+        return R.ok(deptService.selectDeptById(deptId));
     }
 }

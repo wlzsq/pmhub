@@ -1,3 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.laigeoffer.pmhub.api.system.factory.UserFeginFallbackFactory,\
-com.laigeoffer.pmhub.api.system.factory.LogFeignFallbackFactory
+com.laigeoffer.pmhub.api.system.factory.LogFeignFallbackFactory,\
+com.laigeoffer.pmhub.api.system.factory.DeptFeignFallbackFactory,\
+com.laigeoffer.pmhub.api.system.factory.RoleFeignFallbackFactory

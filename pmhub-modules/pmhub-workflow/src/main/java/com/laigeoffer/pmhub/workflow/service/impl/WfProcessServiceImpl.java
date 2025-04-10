@@ -11,6 +11,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.laigeoffer.pmhub.api.project.ProjectTaskService;
+import com.laigeoffer.pmhub.api.system.DeptFeignService;
+import com.laigeoffer.pmhub.api.system.RoleFeignService;
 import com.laigeoffer.pmhub.api.system.UserFeignService;
 import com.laigeoffer.pmhub.base.core.constant.SecurityConstants;
 import com.laigeoffer.pmhub.base.core.core.domain.PageQuery;
@@ -51,6 +53,7 @@ import com.laigeoffer.pmhub.workflow.utils.ProcessUtils;
 import com.laigeoffer.pmhub.workflow.utils.TaskUtils;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.flowable.bpmn.constants.BpmnXMLConstants;
 import org.flowable.bpmn.model.Process;
@@ -82,6 +85,7 @@ import java.util.stream.Collectors;
  * @author canghe
  * @createTime 2022/3/24 18:57
  */
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProcessService {
@@ -99,6 +103,8 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
     private final ProjectTaskService projectTaskService;
     // 系统服务
     private final UserFeignService userFeignService;
+    private final RoleFeignService roleFeignService;
+    private final DeptFeignService deptFeignService;
 
     private final String USELESS = "报废";
     private final String DAI_DING = "待定";
@@ -1411,17 +1417,25 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
             if (BpmnXMLConstants.ELEMENT_EVENT_START.equals(activityInstance.getActivityType())) {
                 if (ObjectUtil.isNotNull(historicProcessInstance)) {
                     Long userId = Long.parseLong(historicProcessInstance.getStartUserId());
-                    SysUser user = wfCopyMapper.selectUserById(userId);
-                    if (user != null) {
-                        elementVo.setAssigneeId(user.getUserId());
-                        elementVo.setAssigneeName(user.getNickName());
+                    R<LoginUser> result = userFeignService.getInfoByUserId(userId, SecurityConstants.INNER);
+                    if (!ObjectUtil.isNotNull(result)) {
+                        SysUser user = result.getData().getUser();
+                        if (ObjectUtil.isNotNull(user)) {
+                            elementVo.setAssigneeId(user.getUserId());
+                            elementVo.setAssigneeName(user.getNickName());
+                        }
                     }
                 }
             } else if (BpmnXMLConstants.ELEMENT_TASK_USER.equals(activityInstance.getActivityType())) {
                 if (StringUtils.isNotBlank(activityInstance.getAssignee())) {
-                    SysUser user = wfCopyMapper.selectUserById(Long.parseLong(activityInstance.getAssignee()));
-                    elementVo.setAssigneeId(user.getUserId());
-                    elementVo.setAssigneeName(user.getNickName());
+                    R<LoginUser> result = userFeignService.getInfoByUserId(Long.parseLong(activityInstance.getAssignee()), SecurityConstants.INNER);
+                    if (ObjectUtil.isNotNull(result)) {
+                        SysUser user = result.getData().getUser();
+                        if (ObjectUtil.isNotNull(user)) {
+                            elementVo.setAssigneeId(user.getUserId());
+                            elementVo.setAssigneeName(user.getNickName());
+                        }
+                    }
                 }
                 // 展示审批人员
                 List<HistoricIdentityLink> linksForTask = historyService.getHistoricIdentityLinksForTask(activityInstance.getTaskId());
@@ -1429,18 +1443,31 @@ public class WfProcessServiceImpl extends FlowServiceFactory implements IWfProce
                 for (HistoricIdentityLink identityLink : linksForTask) {
                     if ("candidate".equals(identityLink.getType())) {
                         if (StringUtils.isNotBlank(identityLink.getUserId())) {
-                            SysUser user = wfCopyMapper.selectUserById(Long.parseLong(identityLink.getUserId()));
-                            stringBuilder.append(user.getNickName()).append(",");
+                            R<LoginUser> result = userFeignService.getInfoByUserId(Long.parseLong(identityLink.getUserId()), SecurityConstants.INNER);
+                            if (ObjectUtil.isNotNull(result)) {
+                                SysUser user = result.getData().getUser();
+                                if (ObjectUtil.isNotNull(user)) {
+                                    stringBuilder.append(user.getNickName()).append(",");
+                                }
+                            }
                         }
                         if (StringUtils.isNotBlank(identityLink.getGroupId())) {
                             if (identityLink.getGroupId().startsWith(TaskConstants.ROLE_GROUP_PREFIX)) {
                                 Long roleId = Long.parseLong(StringUtils.stripStart(identityLink.getGroupId(), TaskConstants.ROLE_GROUP_PREFIX));
-                                SysRole role = wfCopyMapper.selectRoleById(roleId);
-                                stringBuilder.append(role.getRoleName()).append(",");
+                                R<SysRole> roleResult = roleFeignService.getRoleById(roleId, SecurityConstants.INNER);
+                                if (ObjectUtil.isNotNull(roleResult)) {
+                                    SysRole role = roleResult.getData();
+                                    stringBuilder.append(role.getRoleName()).append(",");
+                                }
                             } else if (identityLink.getGroupId().startsWith(TaskConstants.DEPT_GROUP_PREFIX)) {
                                 Long deptId = Long.parseLong(StringUtils.stripStart(identityLink.getGroupId(), TaskConstants.DEPT_GROUP_PREFIX));
-                                SysDept dept = wfCopyMapper.selectDeptById(deptId);
-                                stringBuilder.append(dept.getDeptName()).append(",");
+                                R<SysDept> deptResult = deptFeignService.getDeptNameById(deptId, SecurityConstants.INNER);
+                                if (ObjectUtil.isNotNull(deptResult)) {
+                                    SysDept dept = deptResult.getData();
+                                    if (ObjectUtil.isNotNull(dept)) {
+                                        stringBuilder.append(dept.getDeptName()).append(",");
+                                    }
+                                }
                             }
                         }
                     }

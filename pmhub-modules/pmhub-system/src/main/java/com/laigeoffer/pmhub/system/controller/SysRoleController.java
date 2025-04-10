@@ -5,6 +5,7 @@ import com.laigeoffer.pmhub.base.core.annotation.Log;
 import com.laigeoffer.pmhub.base.core.constant.UserConstants;
 import com.laigeoffer.pmhub.base.core.core.controller.BaseController;
 import com.laigeoffer.pmhub.base.core.core.domain.AjaxResult;
+import com.laigeoffer.pmhub.base.core.core.domain.R;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysDept;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysRole;
 import com.laigeoffer.pmhub.base.core.core.domain.entity.SysUser;
@@ -13,6 +14,7 @@ import com.laigeoffer.pmhub.base.core.core.page.TableDataInfo;
 import com.laigeoffer.pmhub.base.core.enums.BusinessType;
 import com.laigeoffer.pmhub.base.core.utils.StringUtils;
 import com.laigeoffer.pmhub.base.core.utils.poi.ExcelUtil;
+import com.laigeoffer.pmhub.base.security.annotation.InnerAuth;
 import com.laigeoffer.pmhub.base.security.annotation.RequiresPermissions;
 import com.laigeoffer.pmhub.base.security.service.TokenService;
 import com.laigeoffer.pmhub.base.security.utils.SecurityUtils;
@@ -340,5 +342,11 @@ public class SysRoleController extends BaseController {
         ajax.put("checkedKeys", deptService.selectDeptListByRoleId(roleId));
         ajax.put("depts", deptService.selectDeptTreeList(new SysDept()));
         return ajax;
+    }
+
+    @InnerAuth
+    @GetMapping("/getRoleById")
+    public R<SysRole> getRoleById(@RequestParam("roleId") Long roleId) {
+        return R.ok(roleService.selectRoleById(roleId));
     }
 }
